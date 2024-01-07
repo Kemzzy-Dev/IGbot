@@ -1,30 +1,33 @@
+import time
+import imaplib
+import email
+from email.header import decode_header
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
-from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import time
-import imaplib
-import email
-from email.header import decode_header
+
 
 chrome_options = Options()
 chrome_options.add_experimental_option("detach", True)
 chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--temp-profile")
 
 service = Service(executable_path='./chromedriver')
+
 
 # Create a new instance of the Chrome driver
 driver = webdriver.Chrome(service=service,options=chrome_options)
 
 class IG:
     def __init__(self) -> None:
-        self.username = 'Enrikkodra461253'
+        self.username = 'Vullnetzane64125'
         self.password = 'mohammad2225'
-        self.newEmail = "Ariannalee341303@hotmail.com"
+        self.newEmail = "Abigailgarcia065337@hotmail.com"
+        self.newUsername = 'Vullnetzane42145'
 
     def loginIG(self):
         driver.get('https://www.instagram.com/accounts/login/')
@@ -60,12 +63,32 @@ class IG:
         checkButton.click()
 
         time.sleep(3)
-        nextButton = driver.find_element(By.XPATH, '//*[@id="mount_0_0_Fz"]/div/div[1]/div/div[3]/div/div/div[2]/div/div/div/div/div/div/div/div[6]/div[3]/div/div/div/div/div/div/div')
+        nextButton = driver.find_element(By.CSS_SELECTOR, "div[role='button']")
         nextButton.click()
 
-    def changePassword(self):  
-        pass 
+    def changeName(self):  
+        self.loginIG()
 
+        time.sleep(5)
+        driver.get("https://accountscenter.instagram.com")
+
+        # newUsernameInput = WebDriverWait(driver, 20).until(
+        #     EC.presence_of_element_located((By.TAG_NAME, 'input'))
+        # )
+        # newUsernameInput.send_keys(Keys.CONTROL + "a")
+        # newUsernameInput.send_keys(Keys.DELETE)
+        # newUsernameInput.send_keys(self.newUsername)
+
+        # newUsernameInput.send_keys(Keys.TAB)
+        # newUsernameInput.send_keys(Keys.ENTER)
+
+
+
+        # time.sleep(3)
+        # doneButton = WebDriverWait(driver, 20).until(
+        #     EC.presence_of_element_located((By.CSS_SELECTOR, "div[role='button']"))
+        # )
+        # doneButton.click()
 
 
 class Email:
@@ -73,27 +96,27 @@ class Email:
         self.password = "LAj461ciJS"
         self.email = "Enrikkodra461253@outlook.com"
 
-    # def loginEmail(self):
-    #     # URL for Gmail login
-    #     gmail_url = 'https://login.live.com/'
+    def loginEmail(self):
+        # URL for Gmail login
+        gmail_url = 'https://login.live.com/'
 
-    #     # Set up Chrome options for headless mode
-    #     # chrome_options.add_argument('--headless')  # Run Chrome in headless mode
+        # Set up Chrome options for headless mode
+        # chrome_options.add_argument('--headless')  # Run Chrome in headless mode
 
-    #     # Navigate to Gmail login page
-    #     driver.get(gmail_url)
+        # Navigate to Gmail login page
+        driver.get(gmail_url)
 
-    #     # Locate the email input field and enter the email address
-    #     email_field = driver.find_element("name", "loginfmt")
-    #     email_field.send_keys(self.email)
-    #     email_field.send_keys(Keys.RETURN)
+        # Locate the email input field and enter the email address
+        email_field = driver.find_element("name", "loginfmt")
+        email_field.send_keys(self.email)
+        email_field.send_keys(Keys.RETURN)
 
-    #     # Locate the password input field and enter the password
-    #     password_field = WebDriverWait(driver, 20).until(
-    #         EC.presence_of_element_located((By.NAME, 'passwd'))
-    #     )
-    #     password_field.send_keys(self.password)
-    #     password_field.send_keys(Keys.RETURN)
+        # Locate the password input field and enter the password
+        password_field = WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located((By.NAME, 'passwd'))
+        )
+        password_field.send_keys(self.password)
+        password_field.send_keys(Keys.RETURN)
 
     def getOTP(self):
         # self.loginEmail()
@@ -146,6 +169,6 @@ if __name__ == "__main__":
     igLogin = IG()
     emailLogin = Email()
 
-    igLogin.changeEmail()
-    time.sleep(10)
-    emailLogin.getOTP()
+    igLogin.changeName()
+    # time.sleep(10)
+    # emailLogin.getOTP()
