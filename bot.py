@@ -46,11 +46,17 @@ class IG:
         time.sleep(5)
 
         driver.get("https://accountscenter.instagram.com/personal_info/contact_points/?contact_point_type=email&dialog_type=add_contact_point")
+        time.sleep(3)
 
-        newEmailForm =  driver.find_element("id", ":rv:")
+        newEmailForm = WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.TAG_NAME, 'input'))
+        )
         newEmailForm.send_keys(self.newEmail)
 
-    def changePassword(self):
+        checkButton = driver.find_element(By.NAME, 'noform')
+        checkButton.click()
+
+    def changePassword(self):  
         pass 
 
 
@@ -86,13 +92,12 @@ class Email:
         continueButton = driver.find_element("id", "id__0")
         continueButton.click()
 
-        # Take a screenshot (optional - useful for headless mode)
-        driver.save_screenshot('gmail_headless.png')
+    
 
     def getOTP(self):
         pass
 
 
 if __name__ == "__main__":
-    igLogin = IG()
-    igLogin.changeEmail()
+    igLogin = Email()
+    igLogin.loginEmail()
