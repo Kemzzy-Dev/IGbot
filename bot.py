@@ -1,7 +1,9 @@
 import time
 import imaplib
 import email
+import re
 from email.header import decode_header
+from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service 
@@ -114,85 +116,68 @@ class IG:
         actions.perform()
         
 
+def getOTP(self):
 
-class Email:
-    def __init__(self) -> None:
-        self.password = "LAj461ciJS"
-        self.email = "Enrikkodra461253@outlook.com"
+    # Outlook IMAP settings
+    outlook_server = "outlook.office365.com"
+    username = "Abigailgarcia065337@hotmail.com"
+    password = "lzOfripy54"
 
-    def loginEmail(self):
-        # URL for Gmail login
-        gmail_url = 'https://login.live.com/'
+    # Connect to Outlook's IMAP server
+    mail = imaplib.IMAP4_SSL(outlook_server)
+    mail.login(username, password)
 
-        # Set up Chrome options for headless mode
-        # chrome_options.add_argument('--headless')  # Run Chrome in headless mode
+    # Select the mailbox you want to access
+    mail.select("inbox")
 
-        # Navigate to Gmail login page
-        driver.get(gmail_url)
+    # Search for all emails in the inbox
+    status, messages = mail.search(None, "ALL")
+    messages = messages[0].split()
 
-        # Locate the email input field and enter the email address
-        email_field = driver.find_element("name", "loginfmt")
-        email_field.send_keys(self.email)
-        email_field.send_keys(Keys.RETURN)
+    # Get the latest email
+    latest_email_id = messages[-1]
 
-        # Locate the password input field and enter the password
-        password_field = WebDriverWait(driver, 20).until(
-            EC.presence_of_element_located((By.NAME, 'passwd'))
-        )
-        password_field.send_keys(self.password)
-        password_field.send_keys(Keys.RETURN)
+    # Fetch the email by ID
+    status, msg_data = mail.fetch(latest_email_id, "(RFC822)")
+    raw_email = msg_data[0][1]
 
-    def getOTP(self):
-        # self.loginEmail()
+    # Parse the raw email
+    msg = email.message_from_bytes(raw_email)
 
-        # driver.get("https://outlook.live.com/mail/0/")
+    # Extract the HTML part of the email
+    for part in msg.walk():
+        content_type = part.get_content_type()
 
-        # Outlook IMAP settings
-        outlook_server = "outlook.office365.com"
-        username = "Enrikkodra461253@outlook.com"
-        password = "LAj461ciJS"
+        # Check for text/html parts
+        if "text/html" in content_type:
+            # Get the HTML content
+            html_content = part.get_payload(decode=True).decode("utf-8")
 
-        # Connect to Outlook's IMAP server
-        mail = imaplib.IMAP4_SSL(outlook_server)
-        mail.login(username, password)
+    # Parse the HTML part with BeautifulSoup
+    soup = BeautifulSoup(html_content, 'html.parser')
 
-        # Select the mailbox you want to access
-        mail.select("inbox")
+    # Find the confirmation code element by its style attribute
+    confirmation_code_element = soup.find('td', style='padding:10px;color:#565a5c;font-size:32px;font-weight:500;text-align:center;padding-bottom:25px;')
 
-        # Search for all emails in the inbox
-        status, messages = mail.search(None, "ALL")
-        messages = messages[0].split()
+    # Extract the confirmation code
+    if confirmation_code_element:
+        confirmation_code = confirmation_code_element.get_text(strip=True)
+        code = confirmation_code
+    else:
+        code = "Confirmation code element not found."
+    
+    # Close the connection
+    mail.logout()
 
-        # Get the latest email
-        latest_email_id = messages[-1]
-
-        # Fetch the email by ID
-        status, msg_data = mail.fetch(latest_email_id, "(RFC822)")
-        raw_email = msg_data[0][1]
-
-        # Parse the raw email
-        msg = email.message_from_bytes(raw_email)
-        subject, encoding = decode_header(msg["Subject"])[0]
-        if isinstance(subject, bytes):
-            subject = subject.decode(encoding or "utf-8")
-
-        # Print the subject and the body of the email
-        print("Subject:", subject)
-
-        # Extract OTP from the email body (assuming it's in the body)
-        otp = "123456"  # Replace with your OTP extraction logic
-
-        # Close the connection
-        mail.logout()
-
-
-
+    #return the code
+    return code
 
 
 if __name__ == "__main__":
-    igLogin = IG()
+    # igLogin = IG()
     emailLogin = Email()
 
-    igLogin.changeEmail()
+    # igLogin.changeEmail()
+    emailLogin.getOTP()
     # time.sleep(10)
     # emailLogin.getOTP()
