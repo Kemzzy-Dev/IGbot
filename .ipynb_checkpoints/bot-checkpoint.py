@@ -4,13 +4,11 @@ import email
 from email.header import decode_header
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.service import Service 
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.action_chains import ActionChains
-
 
 
 chrome_options = Options()
@@ -20,26 +18,22 @@ chrome_options.add_argument("--temp-profile")
 
 service = Service(executable_path='./chromedriver')
 
+
 # Create a new instance of the Chrome driver
 driver = webdriver.Chrome(service=service,options=chrome_options)
-driver.implicitly_wait(10)
-
-actions = ActionChains(driver)
-
 
 class IG:
     def __init__(self) -> None:
-        self.username = 'Vullnetzane42145'
+        self.username = 'Vullnetzane64125'
         self.password = 'mohammad2225'
         self.newEmail = "Abigailgarcia065337@hotmail.com"
-        self.newUsername = 'Vullnetzane64125'
+        self.newUsername = 'Vullnetzane42145'
 
     def loginIG(self):
-        # Instagram page
-        driver.get('https://instagram.com/accounts/login/')
+        driver.get('https://www.instagram.com/accounts/login/')
 
-        # Wait for the username input field to be present and input username
-        username_input = WebDriverWait(driver,  10).until(
+        # Wait for the username input field to be present
+        username_input = WebDriverWait(driver, 20).until(
             EC.presence_of_element_located((By.NAME, 'username'))
         )
         username_input.send_keys(self.username)
@@ -53,66 +47,48 @@ class IG:
 
 
     def changeEmail(self):
-        # Login to the account
         self.loginIG()
 
-        # wait until page loading completes and then go to the email accounts settings
-        try:
-            WebDriverWait(driver, 20).until(
-                EC.url_contains("onetap")
-            )
-            driver.get("https://accountscenter.instagram.com/personal_info/contact_points/?contact_point_type=email&dialog_type=add_contact_point")
-        except:
-            print("Time Up")
+        time.sleep(5)
 
-        # Input a new email address
+        driver.get("https://accountscenter.instagram.com/personal_info/contact_points/?contact_point_type=email&dialog_type=add_contact_point")
+        time.sleep(3)
+
         newEmailForm = WebDriverWait(driver, 20).until(
             EC.presence_of_element_located((By.TAG_NAME, 'input'))
         )
         newEmailForm.send_keys(self.newEmail)
 
-        # Click on the checkbox to accept the terms, tab to the done button
         checkButton = driver.find_element(By.NAME, 'noform')
         checkButton.click()
-        checkButton.send_keys(Keys.TAB)
 
-        # Click on the Done button to submit information
-        actions.send_keys(Keys.RETURN)
-        actions.perform()
+        time.sleep(3)
+        nextButton = driver.find_element(By.CSS_SELECTOR, "div[role='button']")
+        nextButton.click()
 
     def changeName(self):  
-        # Login the email
-        self.loginIG() 
+        self.loginIG()
 
-        try:
-            WebDriverWait(driver, 20).until(
-                EC.url_contains("onetap")
-            )
-            # Load the link for settings
-            driver.get("https://accountscenter.instagram.com/profiles")
-        except:
-            print("Time Up")
+        time.sleep(5)
+        driver.get("https://accountscenter.instagram.com")
 
-        #Get the user link and load the page
-        Userlink = driver.find_elements(By.XPATH, "//*[@role='link']")[10].get_attribute("href")
-        driver.get(f"{Userlink}username/manage/")
+        # newUsernameInput = WebDriverWait(driver, 20).until(
+        #     EC.presence_of_element_located((By.TAG_NAME, 'input'))
+        # )
+        # newUsernameInput.send_keys(Keys.CONTROL + "a")
+        # newUsernameInput.send_keys(Keys.DELETE)
+        # newUsernameInput.send_keys(self.newUsername)
 
-        # Click on the username settings and replace it with the new username
-        newUsernameInput = WebDriverWait(driver, 20).until(
-            EC.presence_of_element_located((By.TAG_NAME, 'input'))
-        )
-        newUsernameInput.send_keys(Keys.CONTROL + "a")
-        newUsernameInput.send_keys(Keys.DELETE)
-        newUsernameInput.send_keys(self.newUsername)
+        # newUsernameInput.send_keys(Keys.TApip install notebook
+        # newUsernameInput.send_keys(Keys.ENTER)
 
-        # Moves the cursor to the Done button and clicks 
-        time.sleep(3)
-        newUsernameInput.click()
-        actions.send_keys(Keys.TAB)
-        actions.send_keys(Keys.TAB)
-        actions.send_keys(Keys.ENTER)
-        actions.perform()
-        
+
+
+        # time.sleep(3)
+        # doneButton = WebDriverWait(driver, 20).until(
+        #     EC.presence_of_element_located((By.CSS_SELECTOR, "div[role='button']"))
+        # )
+        # doneButton.click()
 
 
 class Email:
@@ -193,6 +169,6 @@ if __name__ == "__main__":
     igLogin = IG()
     emailLogin = Email()
 
-    igLogin.changeEmail()
+    igLogin.changeName()
     # time.sleep(10)
     # emailLogin.getOTP()
