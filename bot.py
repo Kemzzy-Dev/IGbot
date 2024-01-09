@@ -2,9 +2,11 @@ import time
 import imaplib
 import email
 import re
+from imapclient import IMAPClient
 from email.header import decode_header
 from bs4 import BeautifulSoup
 from selenium import webdriver
+from selenium.webdriver.common.alert import Alert
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service 
 from selenium.webdriver.chrome.options import Options
@@ -12,13 +14,19 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.common.exceptions import WebDriverException, NoSuchElementException
 
+# Setting up proxy
+proxy_string = "texas1.thesocialproxy.com:10000:wefsdfsdsdf:dfsdfivhs9dsfsf"
+proxy_parts = proxy_string.split(':')
 
 
 chrome_options = Options()
 chrome_options.add_experimental_option("detach", True)
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--temp-profile")
+# chrome_options.add_argument(f'--proxy-server=https://{proxy_parts[0]}:{proxy_parts[1]}@{proxy_parts[2]}:{proxy_parts[3]}')
+
 
 service = Service(executable_path='./chromedriver')
 
@@ -29,12 +37,13 @@ driver.implicitly_wait(10)
 actions = ActionChains(driver)
 
 
-class IG:
-    def __init__(self) -> None:
-        self.username = 'Vullnetzane42145'
-        self.password = 'mohammad2225'
-        self.newEmail = "Abigailgarcia065337@hotmail.com"
-        self.newUsername = 'Vullnetzane64125'
+class IGBot():
+    def __init__(self, username, password, newUsername, newEmail, newEmailPassword) -> None:
+        self.username = username
+        self.password = password
+        self.newEmail = newEmail
+        self.newUsername = newUsername
+        self.newEmailPassword = newEmailPassword
 
     def loginIG(self):
         # Instagram page
@@ -52,23 +61,38 @@ class IG:
 
         # Submit the login form
         password_input.send_keys(Keys.RETURN)
-
+        
 
     def changeEmail(self):
-        # Login to the account
-        self.loginIG()
+        # Open a new window
+        # driver.execute_script("window.open('', '_blank');")
+        # self.loginIG()
+
+        # try:
+        #     # Check if the error message is displayed
+        #     error_element = driver.find_element(By.XPATH, "//*[contains(text(), 'Sorry, your password was incorrect. Please double-check your password.')]")
+        #     if error_element.is_displayed():
+        #         print("Username or password incorrect")
+        #         exit()
+
+        # except NoSuchElementException:
+        #     # driver.get("https://accountscenter.instagram.com/personal_info/contact_points/?contact_point_type=email&dialog_type=add_contact_point")
 
         # wait until page loading completes and then go to the email accounts settings
-        try:
-            WebDriverWait(driver, 20).until(
-                EC.url_contains("onetap")
-            )
-            driver.get("https://accountscenter.instagram.com/personal_info/contact_points/?contact_point_type=email&dialog_type=add_contact_point")
-        except:
-            print("Time Up")
+        # try:
+        #     WebDriverWait(driver, 50).until(
+        #         EC.url_contains("onetap")
+        #     )
+        #     driver.get("https://accountscenter.instagram.com/personal_info/contact_points/?contact_point_type=email&dialog_type=add_contact_point")
+        # except:
+        #     print("Time Up")
+        alert = Alert(driver)
+        alert.dismiss()
+
+        driver.get("https://accountscenter.instagram.com/personal_info/contact_points/?contact_point_type=email&dialog_type=add_contact_point")
 
         # Input a new email address
-        newEmailForm = WebDriverWait(driver, 20).until(
+        newEmailForm = WebDriverWait(driver, 50).until(
             EC.presence_of_element_located((By.TAG_NAME, 'input'))
         )
         newEmailForm.send_keys(self.newEmail)
@@ -79,49 +103,80 @@ class IG:
         checkButton.send_keys(Keys.TAB)
 
         # Click on the Done button to submit information
+        time.sleep(3)
         actions.send_keys(Keys.RETURN)
         actions.perform()
 
-    def changeName(self):  
+        #Get the OTP from the mail and input in the field
+        try:
+            otp = getOTP(self.newEmail, self.newEmailPassword)
+        except:
+            print("Error, try again.")
+            exit()
+
+        # Select field
+        otpForm = WebDriverWait(driver, 50).until(
+            EC.presence_of_element_located((By.ID, ':rd:'))
+        )
+
+        # Enter otp and click next
+        otpForm.send_keys(otp)
+        actions.send_keys(Keys.TAB)
+        actions.send_keys(Keys.TAB)
+        actions.send_keys(Keys.TAB)
+        time.sleep(3)
+        actions.send_keys(Keys.ENTER)
+
+
+    def changeName(self) -> None:  
         # Login the email
         self.loginIG() 
 
         try:
-            WebDriverWait(driver, 20).until(
-                EC.url_contains("onetap")
+            # Check if the error message is displayed
+            error_element = driver.find_element(By.XPATH, "//*[contains(text(), 'Sorry, your password was incorrect. Please double-check your password.')]")
+            if error_element.is_displayed():
+                print("Username or password incorrect")
+                exit()
+
+        except NoSuchElementException:
+            try:
+                WebDriverWait(driver, 50).until(
+                    EC.url_contains("onetap")
+                )
+                # Load the link for settings
+                driver.get("https://accountscenter.instagram.com/profiles")
+            except:
+                print("Time Up, Network Error")
+                exit()
+
+            #Get the user link and load the page
+            Userlink = driver.find_elements(By.XPATH, "//*[@role='link']")[10].get_attribute("href")
+            driver.get(f"{Userlink}username/manage/")
+
+            # Click on the username settings and replace it with the new username
+            newUsernameInput = WebDriverWait(driver, 50).until(
+                EC.presence_of_element_located((By.TAG_NAME, 'input'))
             )
-            # Load the link for settings
-            driver.get("https://accountscenter.instagram.com/profiles")
-        except:
-            print("Time Up")
+            newUsernameInput.send_keys(Keys.CONTROL + "a")
+            newUsernameInput.send_keys(Keys.DELETE)
+            newUsernameInput.send_keys(self.newUsername)
 
-        #Get the user link and load the page
-        Userlink = driver.find_elements(By.XPATH, "//*[@role='link']")[10].get_attribute("href")
-        driver.get(f"{Userlink}username/manage/")
-
-        # Click on the username settings and replace it with the new username
-        newUsernameInput = WebDriverWait(driver, 20).until(
-            EC.presence_of_element_located((By.TAG_NAME, 'input'))
-        )
-        newUsernameInput.send_keys(Keys.CONTROL + "a")
-        newUsernameInput.send_keys(Keys.DELETE)
-        newUsernameInput.send_keys(self.newUsername)
-
-        # Moves the cursor to the Done button and clicks 
-        time.sleep(3)
-        newUsernameInput.click()
-        actions.send_keys(Keys.TAB)
-        actions.send_keys(Keys.TAB)
-        actions.send_keys(Keys.ENTER)
-        actions.perform()
+            # Moves the cursor to the Done button and clicks 
+            time.sleep(3)
+            newUsernameInput.click()
+            actions.send_keys(Keys.TAB)
+            actions.send_keys(Keys.TAB)
+            
+            time.sleep(3)
+            actions.send_keys(Keys.ENTER)
+            actions.perform()
         
 
-def getOTP(self):
+def getOTP(username:str, password:str) -> str:
 
     # Outlook IMAP settings
     outlook_server = "outlook.office365.com"
-    username = "Abigailgarcia065337@hotmail.com"
-    password = "lzOfripy54"
 
     # Connect to Outlook's IMAP server
     mail = imaplib.IMAP4_SSL(outlook_server)
@@ -173,11 +228,19 @@ def getOTP(self):
     return code
 
 
-if __name__ == "__main__":
-    # igLogin = IG()
-    emailLogin = Email()
 
-    # igLogin.changeEmail()
-    emailLogin.getOTP()
-    # time.sleep(10)
-    # emailLogin.getOTP()
+if __name__ == "__main__":
+    try:
+        newBot = IGBot('Enrikkodra461253', 'mohammad2225','Enrikkodra364243', "Ariannalee341303@hotmail.com", 'WVBNHuvT25')
+
+        newBot.changeName()
+        newBot.changeEmail()
+
+        print("Done")
+    except WebDriverException as e:
+            if "net::ERR_NAME_NOT_RESOLVED" in str(e):
+                print("No internet or site not rechable. Try again")
+            else:
+                print(e)
+
+            
