@@ -166,6 +166,18 @@ class IGBot():
             time.sleep(3)
             actions.send_keys(Keys.ENTER)
 
+            time.sleep(3)
+
+            # Refresh to ensure the name propagates around instagram
+            refresh_count = 3
+
+            for _ in range(refresh_count):
+                # Refresh the page
+                driver.refresh()
+
+                # Optional: Add a delay between each refresh
+                time.sleep(2)
+
             driver.quit()
 
 
@@ -288,7 +300,7 @@ def getOTP(userEmail:str, password:str) -> str:
 
 if __name__ == "__main__":
     try:
-        newBot = IGBot('Luisosmani730275', 'mohammad2225','Luisosmani46125', "Jessicaclive049557@hotmail.com", 'XtpBiGae37')
+        newBot = IGBot('Luisosmani46125', 'mohammad2225','Luisosmani730275', "Jessicaclive049557@hotmail.com", 'XtpBiGae37')
 
         newBot.changeName()
         time.sleep(5)
