@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Loading Page</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='loadingPage.css') }}">
+</head>
+<body>
+  <div class="loader"></div>
+  <div class="result" id="result"></div>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script>
+      $(document).ready(function() {
+          // Poll the server every second
+          var intervalId = setInterval(function() {
+              $.getJSON("/task", function(data) {
+                if (data.done) {
+                    // Stop polling
+                    clearInterval(intervalId);
+
+                    // Hide the loader
+                    $('.loader').hide();
+
+                    // Show the result
+                    $('#result').text('File path: ' + data.path).show();
+                }
+              });
+          }, 1000);
+      });
+  </script>
+</body>
+</html>

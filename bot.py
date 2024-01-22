@@ -17,15 +17,15 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import NoSuchElementException
-from selenium.common.exceptions import WebDriverException, NoAlertPresentException
+from selenium.common.exceptions import WebDriverException, NoAlertPresentException, TimeoutException
 
 # Create new options for every driver instance
 def get_options():
     options=uc.ChromeOptions()
 
-    # options.add_argument("--headless")
     options.add_experimental_option("detach", True)
     options.add_argument("--temp-profile")
+    # options.add_argument("--headless")
     options.add_argument(f'--proxy-server=https://{proxy_parts[2]}:{proxy_parts[3]}@{proxy_parts[0]}:{proxy_parts[1]}')
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
@@ -35,7 +35,6 @@ def get_options():
     options.add_argument('--disable-blink-features=AutomationControlled')
     options.add_argument('--start-maximized')
     options.add_experimental_option("prefs", {
-    
         "profile.default_content_setting_values.media_stream_mic": 1,
         "profile.default_content_setting_values.media_stream_camera": 1,
         "profile.default_content_setting_values.geolocation": 0,
@@ -56,12 +55,16 @@ def getDriver():
 proxy_string = "texas1.thesocialproxy.com:10000:wxk9s2mezahrfqby:lgpn0dzbexqmysrw"
 proxy_parts = proxy_string.split(':')
 
-# logging
+# Set up logging
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+
 logger = logging.getLogger('selenium')
 logger.setLevel(logging.INFO)
+logger.addHandler(console_handler)
 
 
-class IGBot():
+class IGBot:
     def __init__(self, username, password, newUsername, newEmail, newEmailPassword) -> None:
         self.username = username
         self.password = password
@@ -102,33 +105,30 @@ class IGBot():
         password_input.send_keys(Keys.RETURN)
         
 
-    def changeEmail(self):
+    def changeEmail(self) -> str:
         # Open a new window
-        # driver.execute_script("window.open('', '_blank');")
         driver, actions = getDriver()
         self.loginIG(driver)
 
         try:
-            # Check if the error message is displayed
-            error_element = driver.find_element(By.XPATH, "//*[contains(text(), 'Sorry, your password was incorrect. Please double-check your password.')]")
-            if error_element.is_displayed():
-                print("Username or password incorrect")
-                exit()
-
-        except NoSuchElementException:
-            # driver.get("https://accountscenter.instagram.com/personal_info/contact_points/?contact_point_type=email&dialog_type=add_contact_point")
-
-            # wait until page loading completes and then go to the email accounts settings
+            # Check if the error messages displayed
+            incorrect = WebDriverWait(driver, 15).until(
+                EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Sorry, your password was incorrect. Please double-check your password.')]"))
+            )
+            emailSignal = "Instagram username or password incorrect"
+        except NoSuchElementException or TimeoutException as e:
             try:
                 WebDriverWait(driver, 50).until(
                     EC.url_contains("onetap")
                 )
+                # Load the link for settings
                 driver.get("https://accountscenter.instagram.com/personal_info/contact_points/?contact_point_type=email&dialog_type=add_contact_point")
-            except:
-                print("Time Up")
-            
-            driver.get("https://accountscenter.instagram.com/personal_info/contact_points/?contact_point_type=email&dialog_type=add_contact_point")
 
+            except Exception as e:
+                emailSignal = ("Time Out, Network Error")
+
+            time.sleep(3)
+            
             # Input a new email address
             newEmailForm = WebDriverWait(driver, 50).until(
                 EC.presence_of_element_located((By.TAG_NAME, 'input'))
@@ -149,9 +149,7 @@ class IGBot():
             try:
                 otp = getOTP(self.newEmail, self.newEmailPassword)
             except Exception as e:
-                print("Error, try again.")
-                print(e)
-                exit()
+                emailSignal = ("Failed to get OTP, try again.")
 
             # Select field
             otpForm = WebDriverWait(driver, 50).until(
@@ -177,23 +175,25 @@ class IGBot():
 
                 # Optional: Add a delay between each refresh
                 time.sleep(2)
+                emailSignal = "Email Change Done"
 
-            driver.quit()
+        driver.close()
+        driver.quit()
+        return emailSignal
 
 
-    def changeName(self) -> None:  
+    def changeName(self) -> str:  
         driver, actions = getDriver()
-        
+             
         # Login the email
         self.loginIG(driver) 
 
         try:
-            # Check if the error message is displayed
-            error_element = driver.find_element(By.XPATH, "//*[contains(text(), 'Sorry, your password was incorrect. Please double-check your password.')]")
-            if error_element.is_displayed():
-                print("Username or password incorrect")
-                exit()
-
+            # Check if the error messages displayed
+            incorrect = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Sorry, your password was incorrect. Please double-check your password.')]"))
+            )
+            nameSignal = "Instagram username or password incorrect"
         except NoSuchElementException:
             try:
                 WebDriverWait(driver, 50).until(
@@ -202,11 +202,12 @@ class IGBot():
                 # Load the link for settings
                 driver.get("https://accountscenter.instagram.com/profiles")
             except:
-                print("Time Up, Network Error")
-                exit()
+                nameSignal = ("Time Up, Network Error")
 
             #Get the user link and load the page
-            Userlink = driver.find_elements(By.XPATH, "//*[@role='link']")[10].get_attribute("href")
+            Userlink = WebDriverWait(driver, 20).until(
+                EC.presence_of_element_located((By.XPATH, "//*[@role='link']")[10].get_attribute("href"))
+            )
             driver.get(f"{Userlink}username/manage/")
 
             # Click on the username settings and replace it with the new username
@@ -237,9 +238,13 @@ class IGBot():
 
                 # Optional: Add a delay between each refresh
                 time.sleep(2) 
+                nameSignal = "Name Change Done"
 
+        driver.close()
         driver.quit()
         del driver
+
+        return nameSignal
         
 
 def getOTP(userEmail:str, password:str) -> str:
@@ -297,20 +302,42 @@ def getOTP(userEmail:str, password:str) -> str:
     return code
 
 
-
 if __name__ == "__main__":
-    try:
-        newBot = IGBot('Luisosmani46125', 'mohammad2225','Luisosmani730275', "Jessicaclive049557@hotmail.com", 'XtpBiGae37')
+    file_path = './dataset.txt'
 
-        newBot.changeName()
-        time.sleep(5)
-        newBot.changeEmail()
+    # Open the file and read its contents
+    with open(file_path, 'r') as file:
+        # Skip the first two lines
+        next(file)
+        next(file)
+        with open('./scan.txt', 'a') as output_file:
+            for line in file:
+                data = line.strip().split(':')
+                print(data)
+                CURRENT_USERNAME = data[0]
+                CURRENT_PASSWORD = data[1]
+                NEW_EMAIL_ADDRESS = data[2]
+                NEW_EMAIL_PASSWORD = data[3]
+                NEW_USERNAME = data[4]
 
-        print("Done")
-    except WebDriverException as e:
-            if "net::ERR_NAME_NOT_RESOLVED" in str(e):
-                print("No internet or site not rechable. Try again")
-            else:
-                print(e)
+                try:
+
+                    newBot = IGBot(CURRENT_USERNAME, CURRENT_PASSWORD, NEW_USERNAME, NEW_EMAIL_ADDRESS, NEW_EMAIL_PASSWORD)
+
+                    changeNameSuccessful = newBot.changeName()
+                    time.sleep(5)
+                    changeEmailSuccessful = newBot.changeEmail()
+
+                    output_file.write(f"{data[0]}:{data[1]}:{data[2]}:{data[3]}:{data[4]}:::{changeNameSuccessful}:::{changeEmailSuccessful} \n")
+
+                except Exception as e:
+                    print(e)
+                    if "net::ERR_NAME_NOT_RESOLVED" in str(e):
+                        signal = "No internet or site not rechable. Try again"
+                    else:
+                        signal = "Technical Difficulty, Check your list!"
+                    
+                    output_file.write(f"{data[0]}:{data[1]}:{data[2]}:{data[3]}:{data[4]}::{signal} \n")
+                                            
 
             
