@@ -26,7 +26,7 @@ def get_options():
     options.add_experimental_option("detach", True)
     options.add_argument("--temp-profile")
     # options.add_argument("--headless")
-    options.add_argument(f'--proxy-server=https://{proxy_parts[2]}:{proxy_parts[3]}@{proxy_parts[0]}:{proxy_parts[1]}')
+    # options.add_argument(f'--proxy-server=https://{proxy_parts[2]}:{proxy_parts[3]}@{proxy_parts[0]}:{proxy_parts[1]}')
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-notifications")
@@ -80,22 +80,11 @@ class IGBot:
         # Instagram page
         driver.get('https://instagram.com/accounts/login/')
 
-        # check if the login attempt is the first or second time so that we can choose between the normal username or new username
-        if self.attempts == 1:
-            # Wait for the username input field to be present and input username
-            username_input = WebDriverWait(driver,  10).until(
-                EC.presence_of_element_located((By.NAME, 'username'))
-            )
-            username_input.send_keys(self.username)
-            self.attempts += 1
-
-        elif self.attempts == 2:
-            # Wait for the username input field to be present and input username
-            username_input = WebDriverWait(driver,  10).until(
-                EC.presence_of_element_located((By.NAME, 'username'))
-            )
-            username_input.send_keys(self.newUsername)
-            self.attempts -= 1
+        # Wait for the username input field to be present and input username
+        username_input = WebDriverWait(driver,  10).until(
+            EC.presence_of_element_located((By.NAME, 'username'))
+        )
+        username_input.send_keys(self.username)
 
         # Locate the password input field and enter the password
         password_input = driver.find_element(By.NAME, 'password')
@@ -108,74 +97,72 @@ class IGBot:
     def changeEmail(self) -> str:
         # Open a new window
         driver, actions = getDriver()
-        self.loginIG(driver)
+        self.loginIG(driver) #pass the n
 
         try:
             # Check if the error messages displayed
-            incorrect = WebDriverWait(driver, 15).until(
+            incorrect_password = WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Sorry, your password was incorrect. Please double-check your password.')]"))
-            )
-            emailSignal = "Instagram username or password incorrect"
-        except NoSuchElementException or TimeoutException as e:
-            try:
-                WebDriverWait(driver, 50).until(
-                    EC.url_contains("onetap")
-                )
-                # Load the link for settings
-                driver.get("https://accountscenter.instagram.com/personal_info/contact_points/?contact_point_type=email&dialog_type=add_contact_point")
+            )  
 
-            except Exception as e:
-                emailSignal = ("Time Out, Network Error")
+            nameSignal = "Instagram username or password incorrect"
+            return nameSignal
+        except TimeoutException as e:          
+            # Load the link for settings
+            driver.get("https://accountscenter.instagram.com/personal_info/contact_points/?contact_point_type=email&dialog_type=add_contact_point")
 
-            time.sleep(3)
-            
-            # Input a new email address
-            newEmailForm = WebDriverWait(driver, 50).until(
-                EC.presence_of_element_located((By.TAG_NAME, 'input'))
-            )
-            newEmailForm.send_keys(self.newEmail)
+        # Input a new email address
+        newEmailForm = WebDriverWait(driver, 50).until(
+            EC.presence_of_element_located((By.TAG_NAME, 'input'))
+        )
+        newEmailForm.send_keys(self.newEmail)
 
-            # Click on the checkbox to accept the terms, tab to the done button
-            checkButton = driver.find_element(By.NAME, 'noform')
-            checkButton.click()
-            checkButton.send_keys(Keys.TAB)
+        # Click on the checkbox to accept the terms, tab to the done button
+        checkButton = driver.find_element(By.NAME, 'noform')
+        checkButton.click()
+        checkButton.send_keys(Keys.TAB)
 
-            # Click on the Done button to submit information
-            time.sleep(3)
-            actions.send_keys(Keys.RETURN)
-            actions.perform()
+        # Click on the Done button to submit information
+        time.sleep(3)
+        actions.send_keys(Keys.RETURN)
+        actions.perform()
 
-            #Get the OTP from the mail and input in the field
-            try:
-                otp = getOTP(self.newEmail, self.newEmailPassword)
-            except Exception as e:
-                emailSignal = ("Failed to get OTP, try again.")
+        #Get the OTP from the mail and input in the field
+        try:
+            otp = getOTP(self.newEmail, self.newEmailPassword)
+        except Exception as e:
+            emailSignal = ("Failed to get OTP, try again.")
+            return emailSignal
 
-            # Select field
+        # Select field
+        try:
             otpForm = WebDriverWait(driver, 50).until(
                 EC.presence_of_element_located((By.ID, ':rd:'))
             )
+        except:
+            emailSignal = ("OTP field not found. Try again!")
+            return emailSignal
 
-            # Enter otp and click next
-            otpForm.send_keys(otp)
-            actions.send_keys(Keys.TAB)
-            actions.send_keys(Keys.TAB)
-            actions.send_keys(Keys.TAB)
-            time.sleep(3)
-            actions.send_keys(Keys.ENTER)
+        # Enter otp and click next
+        otpForm.send_keys(otp)
+        actions.send_keys(Keys.TAB)
+        actions.send_keys(Keys.TAB)
+        actions.send_keys(Keys.TAB)
+        time.sleep(3)
+        actions.send_keys(Keys.ENTER)
 
-            time.sleep(3)
+        time.sleep(3)
 
-            # Refresh to ensure the name propagates around instagram
-            refresh_count = 3
+        # Refresh to ensure the name propagates around instagram
+        refresh_count = 3
 
-            for _ in range(refresh_count):
-                # Refresh the page
-                driver.refresh()
+        for _ in range(refresh_count):
+            # Refresh the page
+            driver.refresh()
 
-                # Optional: Add a delay between each refresh
-                time.sleep(2)
-                emailSignal = "Email Change Done"
+            # Optional: Add a delay between each refresh
+            time.sleep(2)
+            emailSignal = "Email Change Done"
 
         driver.close()
         driver.quit()
@@ -190,55 +177,55 @@ class IGBot:
 
         try:
             # Check if the error messages displayed
-            incorrect = WebDriverWait(driver, 10).until(
+            incorrect_password = WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Sorry, your password was incorrect. Please double-check your password.')]"))
-            )
-            nameSignal = "Instagram username or password incorrect"
-        except NoSuchElementException:
-            try:
-                WebDriverWait(driver, 50).until(
-                    EC.url_contains("onetap")
-                )
-                # Load the link for settings
-                driver.get("https://accountscenter.instagram.com/profiles")
-            except:
-                nameSignal = ("Time Up, Network Error")
+            )  
 
-            #Get the user link and load the page
+            nameSignal = "Instagram username or password incorrect"
+            return nameSignal
+        except TimeoutException as e:          
+            # Load the link for settings
+            driver.get("https://accountscenter.instagram.com/profiles")
+    
+        #Get the user link and load the page
+        try:
             Userlink = WebDriverWait(driver, 20).until(
                 EC.presence_of_element_located((By.XPATH, "//*[@role='link']")[10].get_attribute("href"))
             )
             driver.get(f"{Userlink}username/manage/")
+        except:
+            nameSignal = ("Could not get user link. Try again!")
+            return nameSignal
 
-            # Click on the username settings and replace it with the new username
-            newUsernameInput = WebDriverWait(driver, 50).until(
-                EC.presence_of_element_located((By.TAG_NAME, 'input'))
-            )
-            newUsernameInput.send_keys(Keys.CONTROL + "a")
-            newUsernameInput.send_keys(Keys.DELETE)
-            newUsernameInput.send_keys(self.newUsername)
+        # Click on the username settings and replace it with the new username
+        newUsernameInput = WebDriverWait(driver, 50).until(
+            EC.presence_of_element_located((By.TAG_NAME, 'input'))
+        )
+        newUsernameInput.send_keys(Keys.CONTROL + "a")
+        newUsernameInput.send_keys(Keys.DELETE)
+        newUsernameInput.send_keys(self.newUsername)
 
-            # Moves the cursor to the Done button and clicks 
-            time.sleep(3)
-            newUsernameInput.click()
-            actions.send_keys(Keys.TAB)
-            actions.send_keys(Keys.TAB)
-            time.sleep(3)
-            actions.send_keys(Keys.ENTER)
-            actions.perform()
+        # Moves the cursor to the Done button and clicks 
+        time.sleep(3)
+        newUsernameInput.click()
+        actions.send_keys(Keys.TAB)
+        actions.send_keys(Keys.TAB)
+        time.sleep(3)
+        actions.send_keys(Keys.ENTER)
+        actions.perform()
 
-            time.sleep(3)
+        time.sleep(3)
 
-            # Refresh to ensure the name propagates around instagram
-            refresh_count = 3
+        # Refresh to ensure the name propagates around instagram
+        refresh_count = 3
 
-            for _ in range(refresh_count):
-                # Refresh the page
-                driver.refresh()
+        for _ in range(refresh_count):
+            # Refresh the page
+            driver.refresh()
 
-                # Optional: Add a delay between each refresh
-                time.sleep(2) 
-                nameSignal = "Name Change Done"
+            # Optional: Add a delay between each refresh
+            time.sleep(2) 
+            nameSignal = "Name Change Done"
 
         driver.close()
         driver.quit()
@@ -301,6 +288,14 @@ def getOTP(userEmail:str, password:str) -> str:
     #return the code
     return code
 
+def writeOutputToFile(nameChange:str, emailChange:str) -> None:
+    with open('./scan.txt', 'a') as file:
+        # Get the current number of entries
+        num_entries = sum(1 for line in open('./scan.txt'))
+        # Write the new entry with the assigned number
+        file.write(f"{num_entries + 1}. Name Change: {nameChange}, Email Change: {emailChange}\n")
+
+
 
 if __name__ == "__main__":
     file_path = './dataset.txt'
@@ -310,34 +305,44 @@ if __name__ == "__main__":
         # Skip the first two lines
         next(file)
         next(file)
-        with open('./scan.txt', 'a') as output_file:
-            for line in file:
-                data = line.strip().split(':')
-                print(data)
-                CURRENT_USERNAME = data[0]
-                CURRENT_PASSWORD = data[1]
-                NEW_EMAIL_ADDRESS = data[2]
-                NEW_EMAIL_PASSWORD = data[3]
-                NEW_USERNAME = data[4]
 
-                try:
+        for line in file:
+            data = line.strip().split(':')
+            print(data)
+            CURRENT_USERNAME = data[0]
+            CURRENT_PASSWORD = data[1]
+            NEW_EMAIL_ADDRESS = data[2]
+            NEW_EMAIL_PASSWORD = data[3]
+            NEW_USERNAME = data[4]
 
-                    newBot = IGBot(CURRENT_USERNAME, CURRENT_PASSWORD, NEW_USERNAME, NEW_EMAIL_ADDRESS, NEW_EMAIL_PASSWORD)
+            newBot = IGBot(CURRENT_USERNAME, CURRENT_PASSWORD, NEW_USERNAME, NEW_EMAIL_ADDRESS, NEW_EMAIL_PASSWORD)
+            
+            # Change email
+            try:
+                nameResponse = newBot.changeEmail()
 
-                    changeNameSuccessful = newBot.changeName()
-                    time.sleep(5)
-                    changeEmailSuccessful = newBot.changeEmail()
+            except Exception as e:
+                print(e)
+                if "net::ERR_NAME_NOT_RESOLVED" in str(e):
+                    nameResponse = "No internet or site not rechable. Try again"
+                else:
+                    nameResponse = "Technical Difficulty, Check your list!"
+                
+            # Change name
+            try:
+                emailResponse = newBot.changeName()
 
-                    output_file.write(f"{data[0]}:{data[1]}:{data[2]}:{data[3]}:{data[4]}:::{changeNameSuccessful}:::{changeEmailSuccessful} \n")
-
-                except Exception as e:
-                    print(e)
-                    if "net::ERR_NAME_NOT_RESOLVED" in str(e):
-                        signal = "No internet or site not rechable. Try again"
-                    else:
-                        signal = "Technical Difficulty, Check your list!"
+            except Exception as e:
+                print(e)
+                if "net::ERR_NAME_NOT_RESOLVED" in str(e):
+                    emailResponse = "No internet or site not rechable. Try again"
+                else:
+                    emailResponse = "Technical Difficulty, Check your list!"
                     
-                    output_file.write(f"{data[0]}:{data[1]}:{data[2]}:{data[3]}:{data[4]}::{signal} \n")
-                                            
+            # Save the results
+            # writeOutputToFile(nameResponse, emailResponse)
+            print(nameResponse, emailResponse)
+                
+
 
             
