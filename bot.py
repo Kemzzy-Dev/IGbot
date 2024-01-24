@@ -26,7 +26,7 @@ def get_options():
     options.add_experimental_option("detach", True)
     options.add_argument("--temp-profile")
     # options.add_argument("--headless")
-    # options.add_argument(f'--proxy-server=https://{proxy_parts[2]}:{proxy_parts[3]}@{proxy_parts[0]}:{proxy_parts[1]}')
+    options.add_argument(f'--proxy-server=https://{proxy_parts[2]}:{proxy_parts[3]}@{proxy_parts[0]}:{proxy_parts[1]}')
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-notifications")
@@ -131,7 +131,7 @@ class IGBot:
         try:
             otp = getOTP(self.newEmail, self.newEmailPassword)
         except Exception as e:
-            emailSignal = ("Failed to get OTP, try again.")
+            emailSignal = ("Failed to get OTP.")
             return emailSignal
 
         # Select field
@@ -140,7 +140,7 @@ class IGBot:
                 EC.presence_of_element_located((By.ID, ':rd:'))
             )
         except:
-            emailSignal = ("OTP field not found. Try again!")
+            emailSignal = ("OTP field not found.")
             return emailSignal
 
         # Enter otp and click next
@@ -189,12 +189,16 @@ class IGBot:
     
         #Get the user link and load the page
         try:
-            Userlink = WebDriverWait(driver, 20).until(
-                EC.presence_of_element_located((By.XPATH, "//*[@role='link']")[10].get_attribute("href"))
+            links = WebDriverWait(driver, 50).until(
+                EC.presence_of_all_elements_located((By.XPATH, "//*[@role='link']"))
             )
-            driver.get(f"{Userlink}username/manage/")
-        except:
-            nameSignal = ("Could not get user link. Try again!")
+            time.sleep(3)
+            userLink = links[10].get_attribute("href")
+            driver.get(f"{userLink}username/manage/")
+            
+        except Exception as e:
+            print(e)
+            nameSignal = ("Could not get user link")
             return nameSignal
 
         # Click on the username settings and replace it with the new username
@@ -288,7 +292,7 @@ def getOTP(userEmail:str, password:str) -> str:
     #return the code
     return code
 
-def writeOutputToFile(nameChange:str, emailChange:str) -> None:
+def writeOutputToFile(nameChange:str = None, emailChange:str = None) -> None:
     with open('./scan.txt', 'a') as file:
         # Get the current number of entries
         num_entries = sum(1 for line in open('./scan.txt'))
@@ -318,8 +322,19 @@ if __name__ == "__main__":
             newBot = IGBot(CURRENT_USERNAME, CURRENT_PASSWORD, NEW_USERNAME, NEW_EMAIL_ADDRESS, NEW_EMAIL_PASSWORD)
             
             # Change email
+            # try:
+            #     emailResponse = newBot.changeEmail()
+
+            # except Exception as e:
+            #     print(e)
+            #     if "net::ERR_NAME_NOT_RESOLVED" in str(e):
+            #         emailResponse = "No internet or site not rechable. Try again"
+            #     else:
+            #         emailResponse = "Technical Difficulty, Check your list!"
+                
+            # Change name
             try:
-                nameResponse = newBot.changeEmail()
+                nameResponse = newBot.changeName()
 
             except Exception as e:
                 print(e)
@@ -327,21 +342,10 @@ if __name__ == "__main__":
                     nameResponse = "No internet or site not rechable. Try again"
                 else:
                     nameResponse = "Technical Difficulty, Check your list!"
-                
-            # Change name
-            try:
-                emailResponse = newBot.changeName()
-
-            except Exception as e:
-                print(e)
-                if "net::ERR_NAME_NOT_RESOLVED" in str(e):
-                    emailResponse = "No internet or site not rechable. Try again"
-                else:
-                    emailResponse = "Technical Difficulty, Check your list!"
                     
             # Save the results
-            # writeOutputToFile(nameResponse, emailResponse)
-            print(nameResponse, emailResponse)
+            writeOutputToFile(nameResponse)
+            # print(nameResponse, emailResponse)
                 
 
 
