@@ -14,3 +14,7 @@
 #processingText {
     font-size: 1.5rem; /* Adjust font size as needed */
 }
+
+#result{
+    margin-top: 10%;
+}

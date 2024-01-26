@@ -1,5 +1,5 @@
 from flask import Flask, request, render_template, jsonify
-import scripts.bot as bot
+import bot as bot
 
 app = Flask(__name__)
 
@@ -12,13 +12,13 @@ def home():
 def upload():
    file = request.files['file']
    # Now you can save the file, read its contents, etc.
-   file.save('../datasettest.txt')
+   file.save('./data.txt')
    
-   return render_template('loadingPage.html')
+   return render_template('loadingAndResults.html')
 
 
 @app.route('/task', methods=['GET'])
 def task():
-  bot.runBot('../datasettest.txt')
+  file_path = bot.runBot('./data.txt')
   
-  return jsonify({'done': True})
+  return jsonify({'done': True, 'file':file_path})

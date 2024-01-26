@@ -294,16 +294,18 @@ def getOTP(userEmail:str, password:str) -> str:
     return code
 
 def writeOutputToFile(emailChange:str = None, nameChange:str = None) -> None:
-    with open('./scan.txt', 'a') as file:
+    file_path = '/home/kemzzy/Downloads/scan.txt'
+
+    with open(file_path, 'a') as file:
         # Get the current number of entries
         num_entries = sum(1 for line in open('./scan.txt'))
         # Write the new entry with the assigned number
         file.write(f"{num_entries + 1}. Email Change: {emailChange}, Name Change: {nameChange}\n")
 
+    return file_path
+
 
 def runBot(file_path:str = None):
-    # file_path = '../dataset.txt'
-
     # checkVersion()
 
     # Open the file and read its contents
@@ -346,8 +348,9 @@ def runBot(file_path:str = None):
                     nameResponse = "Technical Difficulty"
                     
             # Save the results
-            writeOutputToFile(emailResponse, nameResponse)
-            # print(nameResponse, emailResponse)
+            savedFile = writeOutputToFile(emailResponse, nameResponse)
+    
+    return savedFile
 
 
             

@@ -50,4 +50,3 @@ def check_and_update_chromedriver():
     print(f"Downloaded and updated ChromeDriver to version compatible with Chrome {chrome_version}")
     
 # Check and update ChromeDriver
-check_and_update_chromedriver()
