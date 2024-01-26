@@ -1,7 +1,7 @@
 import time
 import imaplib
 import email
-import re
+import os
 from imapclient import IMAPClient
 from email.header import decode_header
 from bs4 import BeautifulSoup
@@ -16,8 +16,8 @@ import logging
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
-from selenium.common.exceptions import NoSuchElementException
-from selenium.common.exceptions import WebDriverException, NoAlertPresentException, TimeoutException
+# from checkVersion import checkVersion
+from selenium.common.exceptions import TimeoutException
 
 # Create new options for every driver instance
 def get_options():
@@ -101,7 +101,7 @@ class IGBot:
 
         try:
             # Check if the error messages displayed
-            incorrect_password = WebDriverWait(driver, 10).until(
+            incorrect_password = WebDriverWait(driver, 20).until(
                 EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Sorry, your password was incorrect. Please double-check your password.')]"))
             )  
 
@@ -177,7 +177,7 @@ class IGBot:
 
         try:
             # Check if the error messages displayed
-            incorrect_password = WebDriverWait(driver, 10).until(
+            incorrect_password = WebDriverWait(driver, 20).until(
                 EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Sorry, your password was incorrect. Please double-check your password.')]"))
             )  
 
@@ -185,6 +185,7 @@ class IGBot:
             return nameSignal
         except TimeoutException as e:          
             # Load the link for settings
+            print(e)
             driver.get("https://accountscenter.instagram.com/profiles")
     
         #Get the user link and load the page
@@ -192,10 +193,10 @@ class IGBot:
             links = WebDriverWait(driver, 50).until(
                 EC.presence_of_all_elements_located((By.XPATH, "//*[@role='link']"))
             )
-            time.sleep(3)
+            time.sleep(10)
             userLink = links[10].get_attribute("href")
             driver.get(f"{userLink}username/manage/")
-            
+
         except Exception as e:
             print(e)
             nameSignal = ("Could not get user link")
@@ -218,7 +219,7 @@ class IGBot:
         actions.send_keys(Keys.ENTER)
         actions.perform()
 
-        time.sleep(3)
+        time.sleep(8)
 
         # Refresh to ensure the name propagates around instagram
         refresh_count = 3
@@ -229,7 +230,8 @@ class IGBot:
 
             # Optional: Add a delay between each refresh
             time.sleep(2) 
-            nameSignal = "Name Change Done"
+            
+        nameSignal = "Name Change Done"
 
         driver.close()
         driver.quit()
@@ -239,7 +241,6 @@ class IGBot:
         
 
 def getOTP(userEmail:str, password:str) -> str:
-
     # Outlook IMAP settings
     outlook_server = "outlook.office365.com"
 
@@ -292,17 +293,18 @@ def getOTP(userEmail:str, password:str) -> str:
     #return the code
     return code
 
-def writeOutputToFile(nameChange:str = None, emailChange:str = None) -> None:
+def writeOutputToFile(emailChange:str = None, nameChange:str = None) -> None:
     with open('./scan.txt', 'a') as file:
         # Get the current number of entries
         num_entries = sum(1 for line in open('./scan.txt'))
         # Write the new entry with the assigned number
-        file.write(f"{num_entries + 1}. Name Change: {nameChange}, Email Change: {emailChange}\n")
+        file.write(f"{num_entries + 1}. Email Change: {emailChange}, Name Change: {nameChange}\n")
 
 
+def runBot(file_path:str = None):
+    # file_path = '../dataset.txt'
 
-if __name__ == "__main__":
-    file_path = './dataset.txt'
+    # checkVersion()
 
     # Open the file and read its contents
     with open(file_path, 'r') as file:
@@ -322,15 +324,15 @@ if __name__ == "__main__":
             newBot = IGBot(CURRENT_USERNAME, CURRENT_PASSWORD, NEW_USERNAME, NEW_EMAIL_ADDRESS, NEW_EMAIL_PASSWORD)
             
             # Change email
-            # try:
-            #     emailResponse = newBot.changeEmail()
+            try:
+                emailResponse = newBot.changeEmail()
 
-            # except Exception as e:
-            #     print(e)
-            #     if "net::ERR_NAME_NOT_RESOLVED" in str(e):
-            #         emailResponse = "No internet or site not rechable. Try again"
-            #     else:
-            #         emailResponse = "Technical Difficulty, Check your list!"
+            except Exception as e:
+                print(e)
+                if "net::ERR_NAME_NOT_RESOLVED" in str(e):
+                    emailResponse = "No internet or site not rechable. Try again"
+                else:
+                    emailResponse = "Technical Difficulty, Check your list!"
                 
             # Change name
             try:
@@ -339,14 +341,13 @@ if __name__ == "__main__":
             except Exception as e:
                 print(e)
                 if "net::ERR_NAME_NOT_RESOLVED" in str(e):
-                    nameResponse = "No internet or site not rechable. Try again"
+                    nameResponse = "No internet or site not rechable"
                 else:
-                    nameResponse = "Technical Difficulty, Check your list!"
+                    nameResponse = "Technical Difficulty"
                     
             # Save the results
-            writeOutputToFile(nameResponse)
+            writeOutputToFile(emailResponse, nameResponse)
             # print(nameResponse, emailResponse)
-                
 
 
             

@@ -2,15 +2,32 @@
 <html>
 <head>
    <title>File Upload</title>
-   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+   <link rel="stylesheet" href="../static/css/style.css">
 </head>
 <body>
    <div class="container">
-       <h1>File Upload</h1>
+       <h1>Instagram Bot</h1>
        <form action="/upload" method="POST" enctype="multipart/form-data">
            <input type="file" name="file">
            <input type="submit" value="Upload">
        </form>
+       <div class= "instructions">
+           <h3>Instructions</h3>
+           <ul>
+               <li>Compile your list of Instagram accounts you want to work on</li>
+               <li>Save it as a txt file</li>
+               <li>Click on the upload button to upload the File</li>
+               <li>Click on upload to start</li>
+               <li>Wait for the application to finish running</li>
+               <li>A path to the finished file will be shown on screen</li>
+               <li>Go to the path and view the operation that were completed successfully</li>
+           </ul>
+           <h3>Note:</h3>
+           <p>Only txt files are accepted</p>
+           <p>Any account that was unsuccessfull should be complied into another text file</p>
+           <p>The file should be uploaded again</p>
+       </div>
    </div>
 </body>
 </html>

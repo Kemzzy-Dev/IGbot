@@ -1,3 +1,5 @@
 /env
 chromedriver
 gmail_headless.png
+*/__pycache__
+TODO

@@ -9,7 +9,7 @@ body {
     margin: auto;
     overflow: hidden;
     justify-items: center;
-
+    padding-top: 10%;
 }
 .container h1 {
     text-align: center;
@@ -19,12 +19,24 @@ body {
     background: #fff;
     margin-top: 20px;
     border: 1px solid #ccc;
-    padding: 20px;
+    padding: 40px;
     border-radius: 5px;
+    text-align: center;
+    
 }
 .container form input[type="file"] {
     margin-bottom: 20px;
+    margin-right: 4rem;
+    display: inline-block;
+    padding: 10px 15px;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f2f2f2;
+    text-align: center;
 }
+
+
 .container form input[type="submit"] {
     padding: 10px 20px;
     background-color: #007BFF;
