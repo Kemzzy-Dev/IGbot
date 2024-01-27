@@ -3,3 +3,8 @@ chromedriver
 gmail_headless.png
 */__pycache__
 TODO
+/.ipynb_checkpoints
+scan.txt
+dataset.txt
+data.txt
+Data_files

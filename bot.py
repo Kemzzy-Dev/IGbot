@@ -25,8 +25,8 @@ def get_options():
 
     options.add_experimental_option("detach", True)
     options.add_argument("--temp-profile")
-    # options.add_argument("--headless")
-    options.add_argument(f'--proxy-server=https://{proxy_parts[2]}:{proxy_parts[3]}@{proxy_parts[0]}:{proxy_parts[1]}')
+    options.add_argument("--headless")
+    # options.add_argument(f'--proxy-server=https://{proxy_parts[2]}:{proxy_parts[3]}@{proxy_parts[0]}:{proxy_parts[1]}')
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-notifications")
@@ -293,12 +293,12 @@ def getOTP(userEmail:str, password:str) -> str:
     #return the code
     return code
 
-def writeOutputToFile(emailChange:str = None, nameChange:str = None) -> None:
+def writeOutputToFile(emailChange:str = None, nameChange:str = None) -> str:
     file_path = '/home/kemzzy/Downloads/scan.txt'
 
     with open(file_path, 'a') as file:
         # Get the current number of entries
-        num_entries = sum(1 for line in open('./scan.txt'))
+        num_entries = sum(1 for line in open(file_path))
         # Write the new entry with the assigned number
         file.write(f"{num_entries + 1}. Email Change: {emailChange}, Name Change: {nameChange}\n")
 
@@ -330,7 +330,6 @@ def runBot(file_path:str = None):
                 emailResponse = newBot.changeEmail()
 
             except Exception as e:
-                print(e)
                 if "net::ERR_NAME_NOT_RESOLVED" in str(e):
                     emailResponse = "No internet or site not rechable. Try again"
                 else:
@@ -341,7 +340,6 @@ def runBot(file_path:str = None):
                 nameResponse = newBot.changeName()
 
             except Exception as e:
-                print(e)
                 if "net::ERR_NAME_NOT_RESOLVED" in str(e):
                     nameResponse = "No internet or site not rechable"
                 else:
