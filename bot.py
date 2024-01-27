@@ -131,6 +131,7 @@ class IGBot:
         try:
             otp = getOTP(self.newEmail, self.newEmailPassword)
         except Exception as e:
+            print(e)
             emailSignal = ("Failed to get OTP.")
             return emailSignal
 
@@ -193,7 +194,7 @@ class IGBot:
             links = WebDriverWait(driver, 50).until(
                 EC.presence_of_all_elements_located((By.XPATH, "//*[@role='link']"))
             )
-            time.sleep(10)
+            time.sleep(15)
             userLink = links[10].get_attribute("href")
             driver.get(f"{userLink}username/manage/")
 
@@ -293,20 +294,27 @@ def getOTP(userEmail:str, password:str) -> str:
     #return the code
     return code
 
-def writeOutputToFile(emailChange:str = None, nameChange:str = None) -> str:
-    file_path = '/home/kemzzy/Downloads/scan.txt'
+def writeOutputToFile(emailChange: str = None, nameChange: str = None, result_num: int = 1) -> str:
+    result_dir = './Scan_results'
+    if not os.path.exists(result_dir):
+        os.makedirs(result_dir)
 
-    with open(file_path, 'a') as file:
+    file_path = os.path.join(result_dir, f'result{result_num}.txt')
+
+    with open(file_path, 'a') as file:  # Open the file in append mode to add results to the existing file
         # Get the current number of entries
         num_entries = sum(1 for line in open(file_path))
         # Write the new entry with the assigned number
         file.write(f"{num_entries + 1}. Email Change: {emailChange}, Name Change: {nameChange}\n")
 
-    return file_path
+    return os.file_path
 
 
-def runBot(file_path:str = None):
-    # checkVersion()
+def runBot(file_path: str = None):
+    # Find the next available result file number
+    result_num = 1
+    while os.path.exists(f'./Scan_results/result{result_num}.txt'):
+        result_num += 1
 
     # Open the file and read its contents
     with open(file_path, 'r') as file:
@@ -331,7 +339,7 @@ def runBot(file_path:str = None):
 
             except Exception as e:
                 if "net::ERR_NAME_NOT_RESOLVED" in str(e):
-                    emailResponse = "No internet or site not rechable. Try again"
+                    emailResponse = "No internet or site not reachable. Try again"
                 else:
                     emailResponse = "Technical Difficulty, Check your list!"
                 
@@ -341,12 +349,12 @@ def runBot(file_path:str = None):
 
             except Exception as e:
                 if "net::ERR_NAME_NOT_RESOLVED" in str(e):
-                    nameResponse = "No internet or site not rechable"
+                    nameResponse = "No internet or site not reachable"
                 else:
                     nameResponse = "Technical Difficulty"
                     
-            # Save the results
-            savedFile = writeOutputToFile(emailResponse, nameResponse)
+            # Save the results to the corresponding result file
+            savedFile = writeOutputToFile(emailResponse, nameResponse, result_num)
     
     return savedFile
 
