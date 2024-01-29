@@ -18,6 +18,17 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 # from checkVersion import checkVersion
 from selenium.common.exceptions import TimeoutException
+from dotenv import load_dotenv
+
+
+
+# Load env data
+load_dotenv()
+
+username = os.getenv('USERNAME')
+password = os.getenv('PASSWORD')
+hostname = os.getenv('HOSTNAME')
+port = os.getenv('PORT')
 
 # Create new options for every driver instance
 def get_options():
@@ -26,7 +37,7 @@ def get_options():
     options.add_experimental_option("detach", True)
     options.add_argument("--temp-profile")
     options.add_argument("--headless")
-    # options.add_argument(f'--proxy-server=https://{proxy_parts[2]}:{proxy_parts[3]}@{proxy_parts[0]}:{proxy_parts[1]}')
+    options.add_argument(f'--proxy-server=https://{username}:{password}@{hostname}:{port}')
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-notifications")
@@ -44,16 +55,17 @@ def get_options():
 
 def getDriver():
     # Create a new instance of the Chrome driver
-    service = Service(executable_path='./chromedriver')
-    driver = webdriver.Chrome(service=service,options=get_options())
-    driver.implicitly_wait(10)
+    try:
+        service = Service(executable_path='./chromedriver')
+        driver = webdriver.Chrome(service=service,options=get_options())
+    except:
+        driver = webdriver.Chrome(options=get_options())
+
+    driver.implicitly_wait(20)
     actions = ActionChains(driver)
 
     return driver, actions
 
-# Setting up proxy
-proxy_string = "texas1.thesocialproxy.com:10000:wxk9s2mezahrfqby:lgpn0dzbexqmysrw"
-proxy_parts = proxy_string.split(':')
 
 # Set up logging
 console_handler = logging.StreamHandler()
@@ -307,7 +319,7 @@ def writeOutputToFile(emailChange: str = None, nameChange: str = None, result_nu
         # Write the new entry with the assigned number
         file.write(f"{num_entries + 1}. Email Change: {emailChange}, Name Change: {nameChange}\n")
 
-    return os.file_path
+    return file_path
 
 
 def runBot(file_path: str = None):

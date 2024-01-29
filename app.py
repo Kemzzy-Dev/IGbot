@@ -1,5 +1,6 @@
-from flask import Flask, request, render_template, jsonify
+from flask import Flask, request, render_template, jsonify, send_file
 import bot as bot
+import os
 
 app = Flask(__name__)
 
@@ -22,4 +23,18 @@ def task():
   file_path = bot.runBot('./datafile.txt')
   
   # Passes the file path to the view so that it can be downloaded
-  return jsonify({'done': True, 'file':file_path})
+  file_name = os.path.basename(file_path)
+  return jsonify({'done': True, 'file':file_name})
+
+
+@app.route('/download/<path:filename>', methods=['GET'])
+def download_file(filename):
+    # Get the full path to the file
+    file_path = os.path.join(app.root_path, 'Scan_results', filename)
+
+    # Check if the file exists
+    if os.path.exists(file_path):
+        # Send the file to the client for download
+        return send_file(file_path, as_attachment=True)
+    else:
+        return "File not found", 404
