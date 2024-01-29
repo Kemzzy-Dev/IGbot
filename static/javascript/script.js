@@ -9,10 +9,6 @@ fetch('/task')
         const linkElement = document.querySelector('.card-body a.btn-primary');
         linkElement.textContent = 'Download File';
         linkElement.href = 'download/' + filename;
-
-        // Add event listener to the download link to prevent redirection
-        linkElement.addEventListener('click', function(event) {
-            event.preventDefault();
-        });
+        linkElement.download = filename
     })
     .catch(error => console.error('Error:', error));
