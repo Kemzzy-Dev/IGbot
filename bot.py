@@ -22,6 +22,14 @@ from dotenv import load_dotenv
 
 
 
+# Configure the logging module
+logging.basicConfig(
+    filename='logs.log',  # Specify the log file name and path
+    level=logging.DEBUG,            # Set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    format='%(asctime)s [%(levelname)s] - %(message)s',
+)
+
+
 # Load env data
 load_dotenv()
 
@@ -55,11 +63,11 @@ def get_options():
 
 def getDriver():
     # Create a new instance of the Chrome driver
-    try:
-        service = Service(executable_path='./chromedriver')
-        driver = webdriver.Chrome(service=service,options=get_options())
-    except:
-        driver = webdriver.Chrome(options=get_options())
+    # try:
+    #     service = Service(executable_path='./chromedriver')
+    #     driver = webdriver.Chrome(service=service,options=get_options())
+    # except:
+    driver = webdriver.Chrome(options=get_options())
 
     driver.implicitly_wait(20)
     actions = ActionChains(driver)
@@ -143,7 +151,7 @@ class IGBot:
         try:
             otp = getOTP(self.newEmail, self.newEmailPassword)
         except Exception as e:
-            print(e)
+            logging.error(f"An error occurred: {str(e)}", exc_info=True)
             emailSignal = ("Failed to get OTP.")
             return emailSignal
 
@@ -198,7 +206,7 @@ class IGBot:
             return nameSignal
         except TimeoutException as e:          
             # Load the link for settings
-            print(e)
+            logging.error(f"An error occurred: {str(e)}", exc_info=True)
             driver.get("https://accountscenter.instagram.com/profiles")
     
         #Get the user link and load the page
@@ -211,7 +219,7 @@ class IGBot:
             driver.get(f"{userLink}username/manage/")
 
         except Exception as e:
-            print(e)
+            logging.error(f"An error occurred: {str(e)}", exc_info=True)
             nameSignal = ("Could not get user link")
             return nameSignal
 
@@ -337,6 +345,7 @@ def runBot(file_path: str = None):
         for line in file:
             data = line.strip().split(':')
             print(data)
+            logging.info(f"INFO: {str(data)}", exc_info=True)
             CURRENT_USERNAME = data[0]
             CURRENT_PASSWORD = data[1]
             NEW_EMAIL_ADDRESS = data[2]
