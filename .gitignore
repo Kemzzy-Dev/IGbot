@@ -14,3 +14,6 @@ data.txt
 Data_files
 Scan_results
 datafile.txt
+log/logs.log
+dockerfile
+.dockerignore

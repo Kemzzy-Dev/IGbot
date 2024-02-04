@@ -21,11 +21,17 @@ from selenium.common.exceptions import TimeoutException
 from dotenv import load_dotenv
 
 
+log_file_path = './log/logs.log'
+
+# Check if the log file exists
+if not os.path.exists(log_file_path):
+    with open(log_file_path, 'w') as file:
+        file.write('')
 
 # Configure the logging module
 logging.basicConfig(
-    filename='logs.log',  # Specify the log file name and path
-    level=logging.DEBUG,            # Set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    filename=log_file_path,  # Specify the log file name and path
+    level=logging.ERROR,            # Set the logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
     format='%(asctime)s [%(levelname)s] - %(message)s',
 )
 
@@ -63,25 +69,16 @@ def get_options():
 
 def getDriver():
     # Create a new instance of the Chrome driver
-    # try:
-    #     service = Service(executable_path='./chromedriver')
-    #     driver = webdriver.Chrome(service=service,options=get_options())
-    # except:
-    driver = webdriver.Chrome(options=get_options())
+    try:
+        service = Service(executable_path='./chromedriver')
+        driver = webdriver.Chrome(service=service,options=get_options())
+    except:
+        driver = webdriver.Chrome(options=get_options())
 
     driver.implicitly_wait(20)
     actions = ActionChains(driver)
 
     return driver, actions
-
-
-# Set up logging
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
-
-logger = logging.getLogger('selenium')
-logger.setLevel(logging.INFO)
-logger.addHandler(console_handler)
 
 
 class IGBot:
@@ -126,6 +123,9 @@ class IGBot:
             )  
 
             nameSignal = "Instagram username or password incorrect"
+            driver.quit()
+            del driver
+
             return nameSignal
         except TimeoutException as e:          
             # Load the link for settings
@@ -153,23 +153,30 @@ class IGBot:
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}", exc_info=True)
             emailSignal = ("Failed to get OTP.")
+            driver.quit()
+            del driver
+
             return emailSignal
 
         # Select field
         try:
-            otpForm = WebDriverWait(driver, 50).until(
-                EC.presence_of_element_located((By.ID, ':rd:'))
+            label = WebDriverWait(driver, 50).until(
+                EC.presence_of_element_located((By.XPATH, "//*[text()='Enter confirmation code']"))
             )
+            otpID = label.get_attribute('for')
         except:
             emailSignal = ("OTP field not found.")
+            driver.quit()
+            del driver
+
             return emailSignal
 
         # Enter otp and click next
-        otpForm.send_keys(otp)
+        driver.find_element(By.ID, otpID).send_keys(otp)
         actions.send_keys(Keys.TAB)
         actions.send_keys(Keys.TAB)
         actions.send_keys(Keys.TAB)
-        time.sleep(3)
+        time.sleep(2)
         actions.send_keys(Keys.ENTER)
 
         time.sleep(3)
@@ -187,6 +194,7 @@ class IGBot:
 
         driver.close()
         driver.quit()
+
         return emailSignal
 
 
@@ -203,7 +211,11 @@ class IGBot:
             )  
 
             nameSignal = "Instagram username or password incorrect"
+            driver.quit()
+            del driver
+
             return nameSignal
+        
         except TimeoutException as e:          
             # Load the link for settings
             logging.error(f"An error occurred: {str(e)}", exc_info=True)
@@ -221,6 +233,9 @@ class IGBot:
         except Exception as e:
             logging.error(f"An error occurred: {str(e)}", exc_info=True)
             nameSignal = ("Could not get user link")
+            driver.quit()
+            del driver
+
             return nameSignal
 
         # Click on the username settings and replace it with the new username
@@ -359,6 +374,7 @@ def runBot(file_path: str = None):
                 emailResponse = newBot.changeEmail()
 
             except Exception as e:
+                print(e)
                 if "net::ERR_NAME_NOT_RESOLVED" in str(e):
                     emailResponse = "No internet or site not reachable. Try again"
                 else:
@@ -366,9 +382,13 @@ def runBot(file_path: str = None):
                 
             # Change name
             try:
-                nameResponse = newBot.changeName()
+                if emailResponse == "Instagram username or password incorrect":
+                    nameResponse = "Instagram username or password incorrect"
+                else:
+                    nameResponse = newBot.changeName()
 
             except Exception as e:
+                print(e)
                 if "net::ERR_NAME_NOT_RESOLVED" in str(e):
                     nameResponse = "No internet or site not reachable"
                 else:
@@ -378,6 +398,11 @@ def runBot(file_path: str = None):
             savedFile = writeOutputToFile(emailResponse, nameResponse, result_num)
     
     return savedFile
+
+# For testing without the UI
+
+if __name__ == "__main__":
+    runBot("./datafile.txt")
 
 
             
