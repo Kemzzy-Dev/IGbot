@@ -17,3 +17,5 @@ datafile.txt
 log/logs.log
 dockerfile
 .dockerignore
+terraform
+log
