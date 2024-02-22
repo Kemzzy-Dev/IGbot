@@ -12,7 +12,7 @@ def home():
 @app.route('/upload', methods=['POST'])
 def upload():
    file = request.files['file']
-   file.save('./datafile.txt')
+   file.save('./datafile.xlsx')
    
    return render_template('loadingAndResults.html')
 
@@ -20,7 +20,7 @@ def upload():
 @app.route('/task', methods=['GET'])
 def task():
   # Runs the bot and returns the file_path which the result was saved
-  file_path = bot.runBot('./datafile.txt')
+  file_path = bot.runBot('./datafile.xlsx')
   
   # Passes the file path to the view so that it can be downloaded
   file_name = os.path.basename(file_path)
@@ -38,3 +38,7 @@ def download_file(filename):
         return send_file(file_path, as_attachment=True)
     else:
         return "File not found", 404
+
+
+if __name__ == '__main__':
+    app.run(debug=True)

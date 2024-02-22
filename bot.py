@@ -2,8 +2,9 @@ import time
 import imaplib
 import email
 import os
-from imapclient import IMAPClient
-from email.header import decode_header
+import openpyxl
+from openpyxl import Workbook, load_workbook
+# from email.header import decode_header
 from bs4 import BeautifulSoup
 from seleniumwire import webdriver
 from selenium.webdriver.common.alert import Alert
@@ -16,7 +17,6 @@ import logging
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
-# from checkVersion import checkVersion
 from selenium.common.exceptions import TimeoutException
 from dotenv import load_dotenv
 
@@ -329,18 +329,32 @@ def getOTP(userEmail:str, password:str) -> str:
     #return the code
     return code
 
-def writeOutputToFile(emailChange: str = None, nameChange: str = None, result_num: int = 1) -> str:
+
+def writeOutputToFile(data: list, result_num: int) -> str:
+    # Check if the file exists
     result_dir = './Scan_results'
     if not os.path.exists(result_dir):
         os.makedirs(result_dir)
 
-    file_path = os.path.join(result_dir, f'result{result_num}.txt')
+    file_path = os.path.join(result_dir, f'result{result_num}.xlsx')
 
-    with open(file_path, 'a') as file:  # Open the file in append mode to add results to the existing file
-        # Get the current number of entries
-        num_entries = sum(1 for line in open(file_path))
-        # Write the new entry with the assigned number
-        file.write(f"{num_entries + 1}. Email Change: {emailChange}, Name Change: {nameChange}\n")
+    try:
+        wb = load_workbook(file_path)
+        ws = wb.active
+    except FileNotFoundError:
+        # If not, create a new workbook and add the headers
+        wb = Workbook()
+        ws = wb.active
+        headers = ["Account", "Email change", "Name change"]
+        for col_num, header in enumerate(headers,  1):
+            col_letter = ws.cell(row=1, column=col_num).column_letter  # Get column letter
+            ws['{}1'.format(col_letter)] = header
+
+    # Append data starting from the second row
+    ws.append(data)
+
+    # Save the workbook
+    wb.save(file_path)
 
     return file_path
 
@@ -348,59 +362,67 @@ def writeOutputToFile(emailChange: str = None, nameChange: str = None, result_nu
 def runBot(file_path: str = None):
     # Find the next available result file number
     result_num = 1
-    while os.path.exists(f'./Scan_results/result{result_num}.txt'):
+    while os.path.exists(f'./Scan_results/result{result_num}.xlsx'):
         result_num += 1
 
-    # Open the file and read its contents
-    with open(file_path, 'r') as file:
-        # Skip the first two lines
-        next(file)
-        next(file)
+    # Load the Excel workbook
+    workbook = openpyxl.load_workbook(file_path)
 
-        for line in file:
-            data = line.strip().split(':')
-            print(data)
-            logging.info(f"INFO: {str(data)}", exc_info=True)
-            CURRENT_USERNAME = data[0]
-            CURRENT_PASSWORD = data[1]
-            NEW_EMAIL_ADDRESS = data[2]
-            NEW_EMAIL_PASSWORD = data[3]
-            NEW_USERNAME = data[4]
+    # Select the desired sheet
+    sheet = workbook['Sheet1']  # Replace 'Sheet1' with the name of your sheet
 
-            newBot = IGBot(CURRENT_USERNAME, CURRENT_PASSWORD, NEW_USERNAME, NEW_EMAIL_ADDRESS, NEW_EMAIL_PASSWORD)
+    # Iterate through all rows in the sheet
+    for row in sheet.iter_rows(min_row=2, max_row=sheet.max_row, values_only=True):
+        # 'values_only=True' returns the cell values instead of cell objects
+
+        print(row)
+        logging.info(f"INFO: {str(row)}", exc_info=True)
+        
+        CURRENT_USERNAME = row[0]
+        CURRENT_PASSWORD = row[1]
+        NEW_EMAIL_ADDRESS = row[2]
+        NEW_EMAIL_PASSWORD = row[3]
+        NEW_USERNAME = row[4]
+
+        newBot = IGBot(CURRENT_USERNAME, CURRENT_PASSWORD, NEW_USERNAME, NEW_EMAIL_ADDRESS, NEW_EMAIL_PASSWORD)
+        
+        # Change email
+        try:
+            emailResponse = newBot.changeEmail()
+
+        except Exception as e:
             
-            # Change email
-            try:
-                emailResponse = newBot.changeEmail()
-
-            except Exception as e:
+            if "net::ERR_NAME_NOT_RESOLVED" in str(e):
+                emailResponse = "No internet or site not reachable. Try again"
+            else:
                 print(e)
-                if "net::ERR_NAME_NOT_RESOLVED" in str(e):
-                    emailResponse = "No internet or site not reachable. Try again"
-                else:
-                    emailResponse = "Technical Difficulty, Check your list!"
+                emailResponse = "Technical Difficulty, Check your list!"
+            
+        # Change name
+        try:
+            if emailResponse == "Instagram username or password incorrect":
+                nameResponse = "Instagram username or password incorrect"
+            else:
+                nameResponse = newBot.changeName()
+
+        except Exception as e:
+            
+            if "net::ERR_NAME_NOT_RESOLVED" in str(e):
+                nameResponse = "No internet or site not reachable"
+            else:
+                print(e)
+                nameResponse = "Technical Difficulty"
                 
-            # Change name
-            try:
-                if emailResponse == "Instagram username or password incorrect":
-                    nameResponse = "Instagram username or password incorrect"
-                else:
-                    nameResponse = newBot.changeName()
+        # Create a list with the data
+        data = [CURRENT_USERNAME, emailResponse, nameResponse]
 
-            except Exception as e:
-                print(e)
-                if "net::ERR_NAME_NOT_RESOLVED" in str(e):
-                    nameResponse = "No internet or site not reachable"
-                else:
-                    nameResponse = "Technical Difficulty"
-                    
-            # Save the results to the corresponding result file
-            savedFile = writeOutputToFile(emailResponse, nameResponse, result_num)
+        # Write the data to the file
+        savedFile = writeOutputToFile(data, result_num)
     
     return savedFile
 
-# For testing without the UI
 
+# For testing without the UI
 if __name__ == "__main__":
     runBot("./datafile.txt")
 
